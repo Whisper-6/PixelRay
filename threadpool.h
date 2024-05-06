@@ -43,8 +43,8 @@ ThreadPool<THREADS>::ThreadPool() {
 // 子线程函数
 template<int THREADS>
 void* ThreadPool<THREADS>::worker(void* _arg) {
-    ThreadArg* arg = (ThreadArg*)_arg;
-    while (1) {
+    auto arg = (ThreadArg*)_arg;
+    while (true) {
         pthread_mutex_lock(&mutex);
         while (!arg->flag || arg->cntTask->load() == 0)
             pthread_cond_wait(arg->timeToWork, &mutex);

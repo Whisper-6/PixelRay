@@ -5,8 +5,7 @@
 #include <vector>
 #include "threadpool.h"
 #include "geometry.h"
-#include "color.h"
-#pragma comment(lib, "pthreadVC2.lib")
+#include "graphics.h"
 
 struct Voxel {
 	Point pos; // 空间位置
@@ -66,19 +65,19 @@ struct Camera {
 		detj -= _detj;
 	}
 	// 得到点在面板上的 i 坐标
-	inline float i(Point& pos) {
+	inline float i(Point pos) const {
 		return pos * Veci + deti;
 	}
 	// 得到点在面板上的 j 坐标
-	inline float j(Point& pos) {
+	inline float j(Point pos) const {
 		return pos * Vecj + detj;
 	}
 	// 得到点的 depth
-	inline float d(Point& pos) {
+	inline float d(Point pos) const {
 		return pos * Vecd;
 	}
 	// 还原点的世界坐标
-	inline Point pos(float i, float j, float d) {
+	inline Point pos(float i, float j, float d) const {
 		return (i - deti) * Veci + (j - detj) * Vecj + d * Vecd;
 	}
 };
@@ -124,9 +123,9 @@ void DepthMap<N, M>::project(ChunkSet& chunks) {
 		if (i3 < i2) { std::swap(i3, i2); std::swap(j3, j2); }
 		if (i2 < i1) { std::swap(i2, i1); std::swap(j2, j1); }
 		if (i3 < i2) { std::swap(i3, i2); std::swap(j3, j2); }
-		if (i2 - i1 < 1e-4) i2 += 1e-3;
-		if (i3 - i2 < 1e-4) i3 += 1e-3;
-		int iL = i1 - 1e-4, iR = i3;
+		if (i2 - i1 < 1e-4f) i2 += 1e-3f;
+		if (i3 - i2 < 1e-4f) i3 += 1e-3f;
+		int iL = i1 - 1e-4f, iR = i3;
 		iR = min(iR, N - 1);
 		float d1 = camera.d(tri.v1.pos), d2 = camera.d(tri.v2.pos), d3 = camera.d(tri.v3.pos);
 		for (int i = max(iL + 1, 0); i <= iR; i++) {
@@ -134,7 +133,7 @@ void DepthMap<N, M>::project(ChunkSet& chunks) {
 				_jL = intersection(i1, j1, i3, j3, i),
 				_jR = i < i2 ? intersection(i1, j1, i2, j2, i) : intersection(i2, j2, i3, j3, i);
 			if (_jL > _jR)std::swap(_jL, _jR);
-			int jL = _jL - 1e-4, jR = _jR + 1e-4;
+			int jL = _jL - 1e-4f, jR = _jR + 1e-4f;
 			float
 				dk = jcoef1 * (d1 - d3) + jcoef2 * (d2 - d3),
 				db = (icoef1 * i + ccoef1) * (d1 - d3) + (icoef2 * i + ccoef2) * (d2 - d3) + d3;
@@ -180,7 +179,7 @@ void DepthMap<N, M>::getScreen(Color colMap[N][M], Point posMap[N][M], Vector no
 template<int N, int M>
 inline bool DepthMap<N, M>::shadowTest(Point& pos) {
 	float i = camera.i(pos), j = camera.j(pos), depth = camera.d(pos);
-	int i0 = i + 0.5, j0 = j + 0.5;
+	int i0 = i + 0.5f, j0 = j + 0.5f;
 	if (i0 < 0 || i0 >= N || j0 < 0 || j0 >= M)
 		return false;
 	return depth > map[i0][j0].depth;
@@ -263,14 +262,14 @@ float rangeAOTest(Point& pos, DepthData depthMap[N][M], Vector normalMap[N][M], 
 	static constexpr float
 		DistanceCutoff = 8.0f,	// 深度差达到 CutoffDistance 时，AO 阴影淡出
 		AngleCutoff = 0.2f;		// 角度接近垂直时，AO 阴影淡出
-	float light = .0f, total = .0f, weight, depthDet, dot;
-	int i2, j2;
+	float light = .0f, total = .0f;
 	for (auto& sample : Filter) {
-		i2 = i0 + sample.di;
-		j2 = j0 + sample.dj;
-		weight = sample.weight;
-		depthDet = depth - depthMap[i2][j2].depth;
-		dot = normalMap[i2][j2] * camera.Vecd;
+		int i2 = i0 + sample.di,
+			j2 = j0 + sample.dj;
+		float
+			weight = sample.weight,
+			depthDet = depth - depthMap[i2][j2].depth,
+			dot = normalMap[i2][j2] * camera.Vecd;
 		if (depthDet > DistanceCutoff)
 			weight *= DistanceCutoff / depthDet;
 		if (dot > -AngleCutoff)
@@ -349,16 +348,12 @@ void Shadow(DepthMap<N, M>& cameraDepthMap, Vector cameraNormalMap[N][M], DepthM
 			NdotL[i][j] = -(cameraNormalMap[i][j] * sun.Vecd);
 	for (int i = 0; i < N; i++)
 		for (int j = i & 1; j < M; j += 2) {
-			bool shadow;
-			if (NdotL[i][j] < 0)
-				shadow = 0;
-			else {
+			if (NdotL[i][j] > 0) {
 				Point pos =
 					camera.pos(i, j, cameraDepthMap.map[i][j].depth)
 					+ BIAS * cameraNormalMap[i][j];
-				shadow = sunDepthMap.shadowTest(pos);
+				tile[i / TileSize][j / TileSize] |= (1 << sunDepthMap.shadowTest(pos));
 			}
-			tile[i / TileSize][j / TileSize] |= (1 << shadow);
 		}
 	for (int i0 = 0; i0 < N / TileSize; i0++)
 		for (int j0 = 0; j0 < M / TileSize; j0++) {
@@ -417,11 +412,11 @@ public:
 	}
 	void setCamera(float alpha, float beta, Point Mpos) {
 		camera.set(alpha, beta, Mpos);
-		camera.move(-N / 2, -M / 2);
+		camera.move(-0.5f * N, -0.5f * M);
 	}
 	void setSun(float alpha, float beta, Point Mpos) {
 		sun.set(alpha, beta, Mpos);
-		sun.move(-N / 2, -M / 2);
+		sun.move(-0.5f * N, -0.5f * M);
 	}
 	void render(ChunkSet& chunks, Picture<N, M>& pic);
 };

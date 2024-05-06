@@ -3,7 +3,7 @@
 
 #include <immintrin.h>
 #include <cstdio>
-#include <math.h>
+#include <cmath>
 
 const float pi = acos(-1);
 
