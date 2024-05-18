@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_H
-#define GRAPHICS_H
+#ifndef _GRAPHICS_H_
+#define _GRAPHICS_H_
 
 #include <SDL2/SDL.h>
 #include <algorithm>

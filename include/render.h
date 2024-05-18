@@ -1,5 +1,5 @@
-#ifndef _GEOMETRY_H_
-#define _GEOMETRY_H_
+#ifndef _RENDER_H_
+#define _RENDER_H_
 
 #include <algorithm>
 #include <vector>
@@ -8,20 +8,21 @@
 #include "graphics.h"
 
 struct Voxel {
-	Point pos; // 空间位置
-	Vector normal; // 法向量
-	Color col; // 颜色
+	Point pos;      // Position
+	Vector normal;  // Normal
+	Color col;      // Color
 };
 
 unsigned timeStamp;
 
-// 三角面，记录三个顶点的位置、法向、颜色，中间的点的数据由线性插值而得.
+// Triangle, record the position, normal, color of three vertices,
+// the data of the middle point is obtained by linear interpolation.
 struct Triangle {
-	Voxel v1, v2, v3;
-	unsigned stamp;
+    Voxel v1, v2, v3;
+    unsigned stamp;
 };
 
-// 管理三角面的数据结构（目前是 std::vector）
+// Eng: Data structure that manages the triangles (currently std::vector)
 class ChunkSet {
 private:
 public:
@@ -37,7 +38,8 @@ public:
 using std::min;
 using std::max;
 
-// 深度图信息，记录每个 Pixel 被哪个 Triangle 遮挡，以及遮挡处的 depth
+// Depth map information, record which Triangle
+// occludes each Pixel, and the depth at the occlusion
 struct DepthData {
 	Triangle* tri;
 	float depth;
