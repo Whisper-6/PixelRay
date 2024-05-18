@@ -8,6 +8,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -msse4.1 -march=native")
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 
-add_executable(test3 main.cpp
-        graphics.h)
-target_link_libraries(test3 ${SDL2_LIBRARIES})
+include_directories(include)
+include_directories(src)
+
+file(GLOB SOURCES "src/*.cpp")
+add_executable(main main.cpp
+        ${SOURCES})
+
+target_link_libraries(main ${SDL2_LIBRARIES})

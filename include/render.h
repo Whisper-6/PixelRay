@@ -1,5 +1,5 @@
-#ifndef _RENDER_H_
-#define _RENDER_H_
+#ifndef RENDER_H
+#define RENDER_H
 
 #include <algorithm>
 #include <vector>
@@ -22,7 +22,7 @@ struct Triangle {
     unsigned stamp;
 };
 
-// Eng: Data structure that manages the triangles (currently std::vector)
+// Data structure that manages the triangles (currently std::vector)
 class ChunkSet {
 private:
 public:

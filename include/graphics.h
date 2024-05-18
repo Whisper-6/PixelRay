@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <algorithm>
 #include "geometry.h"
+#include "window.h"
 
 #undef min
 #undef max
@@ -11,14 +12,14 @@
 using std::min;
 using std::max;
 
-// 颜色表示为向量
+// Color is represented as a vector
 using Color = Vector;
 
 Color make_col(float r, float g, float b, float alpha) {
 	return { _mm_setr_ps(r, g, b, alpha) };
 }
 
-// 按权重归一化，用于计算平均颜色
+// Normalize by weight, used to calculate average color
 inline Color normalize(const Color &col) {
 	float buf[4];
 	_mm_store_ps(buf, col.vec);
@@ -85,37 +86,6 @@ struct Initializer {
 			exit(-1);
 		}
 		initGamma();
-	}
-};
-
-// SDL 库创建的图形窗口
-class Window {
-private:
-	SDL_Window* window;
-public:
-	SDL_Surface* surface;
-	// surface 是 Uint32 数组, 代表屏幕
-
-	Window(int width, int height, const char* title) {
-		window = SDL_CreateWindow(
-			title,
-			SDL_WINDOWPOS_CENTERED,
-			SDL_WINDOWPOS_CENTERED,
-			width,
-			height,
-			SDL_WINDOW_SHOWN
-		);
-		if (!window) {
-			SDL_Log("create window failed!%s\n", SDL_GetError());
-			exit(-1);
-		}
-		surface = SDL_GetWindowSurface(window);
-	}
-	~Window() {
-		SDL_DestroyWindow(window);
-	}
-	void flush() {
-		SDL_UpdateWindowSurface(window);
 	}
 };
 

@@ -1,8 +1,5 @@
 ﻿#include <algorithm>
-#include <conio.h>
-#include <random>
-#include <chrono>
-#include <thread>
+#include <iostream>
 #include "render.h"
 
 inline void normalize(Vector& vec) {
@@ -203,8 +200,10 @@ int main(int argc, char* argv[])
 {
     Window window(M * PixelScale, N * PixelScale, "PixelRay");
     gen2(chunks);
+    // gen1(chunks);
     printf("Triangles : %d\n", chunks.tris.size());
     render1(chunks, Frames, make_vec(0,0,16), window);
-    getch();
+    // getch();
+    std::cin.get();
     return 0;
 }
